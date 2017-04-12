@@ -36,7 +36,7 @@ $BODY$
 CREATE OR REPLACE FUNCTION webalize(in_string character varying)
   RETURNS character varying AS
 $BODY$
-  SELECT trim(BOTH '-' FROM regexp_replace(lower(system.transliterate_to_ascii(translate($1, '@°', 'a '))), '[^a-z0-9]+', '-', 'g'));
+  SELECT trim(BOTH '-' FROM regexp_replace(lower(system.transliterate_to_ascii(translate($1, '@Â°', 'a '))), '[^a-z0-9]+', '-', 'g'));
 $BODY$
   LANGUAGE sql IMMUTABLE
   COST 1;
