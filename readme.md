@@ -48,7 +48,7 @@ How it works:
 
 In `system.transliterate_to_ascii_rules` table are all transliterations `UTF-8 char` to `ASCII char(s)`. You can update update existing rule, if you're not satisfied with the original one.
 
-Existing rules are taken from great Perl library **[Text-Unidecode](http://search.cpan.org/~sburke/Text-Unidecode-1.30/)** from *Sean M. Burke*. You can use PHP skript `php/transliterate.php` to generate actual rules `sql/transliterate-data.sql` from library. Just copy all `lib/Text/Unidecode/*.pm` files to `php/Unidecode` and run `php php/transliterate.php`. You will get new rules definition and log in `php/output` and PHP arrays with rules in `php/UnidecodePHP`.  
+Existing rules are taken from great Perl library **[Text-Unidecode](http://search.cpan.org/~sburke/Text-Unidecode-1.30/)** from *Sean M. Burke*. You can use PHP skript `php/transliterate.php` to generate actual rules `sql/transliterate-data.sql` from library. Just copy all `lib/Text/Unidecode/*.pm` files to `php/Unidecode` and run `php php/transliterate.php`. You will get new rules definition and log in `php/output` and PHP arrays with rules in `php/UnidecodePHP`.
 
 Database function `system.transliterate_to_ascii` is written in PL/pgSQL and just quick replace all UTF-8 characters in a given string by rules from `system.transliterate_to_ascii_rules` table.
 
@@ -66,7 +66,7 @@ $BODY$
   LANGUAGE sql IMMUTABLE
   COST 1;
 ```
- 
+
 And create URL slugs like this:
 
 ```sql
