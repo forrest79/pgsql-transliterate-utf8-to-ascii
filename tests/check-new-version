@@ -1,0 +1,22 @@
+#!/usr/bin/php
+<?php declare(strict_types=1);
+
+$libraryUrl = 'https://metacpan.org/dist/Text-Unidecode';
+$expectedVersion = '1.30';
+
+$source = file_get_contents($libraryUrl);
+if ($source === FALSE) {
+	echo sprintf('Can\'t download page "%s".', $libraryUrl) . PHP_EOL;
+	exit(1);
+}
+
+if (preg_match('#<span class="release-name">Text-Unidecode-(?<version>[0-9\.]+)</span>#', $source, $matches) !== 1) {
+	echo sprintf('Can\'t get current version from page "%s".', $libraryUrl) . PHP_EOL;
+	exit(1);
+}
+
+$success = $expectedVersion === $matches['version'];
+
+echo sprintf('[%s] => Actual version \'%s\' %s Expected \'%s\'', $success ? 'OK' : 'FAIL', $matches['version'], $success ? '==' : '!=', $expectedVersion). PHP_EOL;
+
+exit($success ? 0 : 1);

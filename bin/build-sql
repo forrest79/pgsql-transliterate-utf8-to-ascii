@@ -1,0 +1,76 @@
+#!/usr/bin/php
+<?php declare(strict_types=1);
+
+$dataDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'data';
+$unidecodeDir = $dataDir . DIRECTORY_SEPARATOR . 'Unidecode';
+$distDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'dist';
+
+if (!is_dir($unidecodeDir)) {
+	echo sprintf('Text::Unidecode files \'x??.pm\' are expecting in \'%s\' directory.', $unidecodeDir);
+	exit(1);
+}
+
+$transliterate = [];
+
+foreach (glob($unidecodeDir . DIRECTORY_SEPARATOR . '*.pm') as $filename) {
+	$phpFilename = $filename . '.php';
+
+	$data = file_get_contents($filename);
+
+	$data = preg_replace_callback('/qq\{(.*)\},/U', function($matches) {
+		$item = $matches[1];
+		switch ($item) {
+			case '\@' :
+			case '\{' :
+			case '\}' :
+				$item = ltrim($item, '\\');
+				break;
+		}
+		return '"' . (!str_contains($item, '"') ? $item : addslashes($item)) . '",';
+	}, $data);
+
+	$data = preg_replace_callback('/q\{(.*)\},/U', function($matches) {
+		$item = $matches[1];
+		return "'" . (!str_contains($item, "'") ? $item : addslashes($item)) . "',";
+	}, $data);
+
+	$data = str_replace('Text::Unidecode::make_placeholder_map()', '[]', $data);
+
+	$data = substr(trim(str_replace('$Text::Unidecode::Char', '$transliterate', $data)), 0, -2);
+
+	file_put_contents($phpFilename, '<?php' . PHP_EOL . $data);
+
+	require($phpFilename);
+	unlink($phpFilename);
+}
+
+$pgEscape = fn (string $text): string => str_replace('\\', '\\\\', str_replace('\'', '\'\'', $text));
+
+$log = '';
+$sql = '';
+
+foreach ($transliterate as $x => $items) {
+	foreach ($items as $y => $item) {
+		$utf8Char = ($x * 256) + $y;
+
+		// keep first 127 characters as is, ignore last 2 characters
+		if (($utf8Char < 127) || ($utf8Char >= 65534)) {
+			continue;
+		}
+
+		// create UTF-8 char by int value
+		$text = mb_convert_encoding(sprintf('&#%s;', intval($utf8Char)), 'UTF-8', 'HTML-ENTITIES');
+
+		// (instead of [?] we want '') || (we don't want to tolerate Win-1252 input, see x00.pm)
+		if (($item == '[?]') || ($utf8Char <= 159)) {
+			$item = '';
+		}
+
+		$log .= sprintf('(%s) %s -> %s', $utf8Char, $text, $item) . PHP_EOL;
+
+		$sql .= PHP_EOL . "\t" . '(\'' . $pgEscape($text) . '\', \'' . $pgEscape($item) . '\'),';
+	}
+}
+
+file_put_contents($dataDir . DIRECTORY_SEPARATOR . 'transliterate.log', $log);
+file_put_contents($distDir . DIRECTORY_SEPARATOR . 'transliterate-data.sql', 'INSERT INTO system.transliterate_to_ascii_rules(chr, trans) VALUES' . mb_substr($sql, 0, -1) . ';' . PHP_EOL);

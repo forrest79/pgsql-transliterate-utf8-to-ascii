@@ -1,0 +1,63 @@
+#!/usr/bin/php
+<?php declare(strict_types=1);
+
+$host = $_ENV['TESTS_PG_HOST'] ?? 'localhost';
+$port = $_ENV['TESTS_PG_PORT'] ?? '5432';
+$user = $_ENV['TESTS_PG_USER'] ?? 'postgres';
+$password = $_ENV['TESTS_PG_PASSWORD'] ?? 'postgres';
+$dbname = $_ENV['TESTS_PG_DBNAME'] ?? 'postgres';
+
+$connection = pg_connect(sprintf('host=%s port=%s user=%s password=%s dbname=%s connect_timeout=5', $host, $port, $user, $password, $dbname));
+if ($connection === FALSE) {
+	echo 'Can\'t connect to DB with this params: ' . sprintf('host=%s port=%s user=%s password=%s dbname=%s connect_timeout=5', $host, $port, $user, $password, $dbname) . PHP_EOL;
+	exit(1);
+}
+
+if (pg_query($connection, file_get_contents(__DIR__ . '/../dist/transliterate-structure.sql')) === FALSE) {
+	echo 'Can\'t load "dist/transliterate-structure.sql".' . PHP_EOL;
+	exit(1);
+}
+
+if (pg_query($connection, file_get_contents(__DIR__ . '/../dist/transliterate-data.sql')) === FALSE) {
+	echo 'Can\'t load "dist/transliterate-data.sql".' . PHP_EOL;
+	exit(1);
+}
+
+$success = TRUE;
+
+$testTransliterate = function (string $text, string $expected) use ($connection, &$success): void
+{
+	$result = pg_query_params($connection, 'SELECT system.transliterate_to_ascii($1)', [$text]);
+	if ($result === FALSE) {
+		echo sprintf('Can\'t call "system.transliterate_to_ascii($1)" for "\'%s\'".', $text) . PHP_EOL;
+		exit(1);
+	}
+
+	$row = pg_fetch_row($result);
+	if ($result === FALSE) {
+		echo sprintf('Can\'t get row for "\'%s\'".', $text) . PHP_EOL;
+		exit(1);
+	}
+
+	$test = $row[0] === $expected;
+
+	echo sprintf('[%s] => Text \'%s\' -> Expected \'%s\'%s', $test ? 'OK' : 'FAIL', $text, $expected, $test ? '' : (' Actual \'' . $row[0] . '\'')). PHP_EOL;
+
+	$success = $success && $test;
+};
+
+$testTransliterate('Příliš žluťoučký kůň úpěl ďábelské ódy', 'Prilis zlutoucky kun upel dabelske ody');
+$testTransliterate('stößt', 'stosst');
+$testTransliterate('鍖椾喊', 'Chen Zhan Han');
+$testTransliterate('Питер. Лето. Любов', 'Piter. Leto. Liubov');
+$testTransliterate('10°C', '10degC');
+$testTransliterate('without-transliterate', 'without-transliterate');
+
+// cleaning
+pg_query($connection, 'DROP FUNCTION IF EXISTS system.transliterate_to_ascii(character varying)');
+pg_query($connection, 'DROP TABLE IF EXISTS system.transliterate_to_ascii_rules');
+pg_query($connection, 'DROP SCHEMA IF EXISTS system');
+
+pg_close($connection);
+
+exit($success ? 0 : 1);

@@ -1,0 +1,22 @@
+name: build
+
+on:
+  schedule:
+    - cron:  '0 10 * * 1'
+
+jobs:
+  run:
+    runs-on: 'ubuntu-20.04'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          coverage: none
+
+      - name: Check new version
+        run: tests/check-new-version

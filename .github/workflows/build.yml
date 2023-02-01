@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron:  '0 10 * * 1'
+
+jobs:
+  run:
+    runs-on: 'ubuntu-20.04'
+
+    strategy:
+      matrix:
+        postgresql-versions: ['11', '12', '13', '14', '15']
+      fail-fast: false
+
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgresql-versions }}
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          coverage: none
+
+      - name: Run tests
+        run: tests/run-tests
