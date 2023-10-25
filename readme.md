@@ -1,7 +1,7 @@
 # PostgreSQL - transliterate UTF-8 to ASCII
 
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/forrest79/pgsql-transliterateutf8toascii/blob/master/LICENSE.md)
-[![Build](https://github.com/forrest79/PgSQL-TransliterateUTF8ToAscii/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/forrest79/PgSQL-TransliterateUTF8ToAscii/actions/workflows/build.yml)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](https://github.com/forrest79/pgsql-transliterate-utf8-to-ascii/blob/master/LICENSE.md)
+[![Build](https://github.com/forrest79/pgsql-transliterate-utf8-to-ascii/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/forrest79/pgsql-transliterate-utf8-to-ascii/actions/workflows/build.yml)
 
 Provides functionality to transliterate all UTF-8 characters to ASCII in pure PostgreSQL.
 
