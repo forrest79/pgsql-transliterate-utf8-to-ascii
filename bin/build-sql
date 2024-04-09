@@ -59,7 +59,7 @@ foreach ($transliterate as $x => $items) {
 		}
 
 		// create UTF-8 char by int value
-		$text = mb_convert_encoding(sprintf('&#%s;', intval($utf8Char)), 'UTF-8', 'HTML-ENTITIES');
+		$text = mb_chr($utf8Char);
 
 		// (instead of [?] we want '') || (we don't want to tolerate Win-1252 input, see x00.pm)
 		if (($item == '[?]') || ($utf8Char <= 159)) {
