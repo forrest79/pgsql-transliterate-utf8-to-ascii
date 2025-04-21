@@ -48,6 +48,7 @@ $pgEscape = fn (string $text): string => str_replace('\\', '\\\\', str_replace('
 
 $log = '';
 $sql = '';
+$unaccentRules = '';
 
 foreach ($transliterate as $x => $items) {
 	foreach ($items as $y => $item) {
@@ -69,8 +70,16 @@ foreach ($transliterate as $x => $items) {
 		$log .= sprintf('(%s) %s -> %s', $utf8Char, $text, $item) . PHP_EOL;
 
 		$sql .= PHP_EOL . "\t" . '(\'' . $pgEscape($text) . '\', \'' . $pgEscape($item) . '\'),';
+
+		$unaccentRules .= $text;
+		if ($item !== '') {
+			$item = str_replace('"', '""', $item);
+			$unaccentRules .= "\t" . (str_contains($item, ' ') ? sprintf('"%s"', $item) : $item);
+		}
+		$unaccentRules .= PHP_EOL;
 	}
 }
 
 file_put_contents($dataDir . DIRECTORY_SEPARATOR . 'transliterate.log', $log);
 file_put_contents($distDir . DIRECTORY_SEPARATOR . 'transliterate-data.sql', 'INSERT INTO system.transliterate_to_ascii_rules(chr, trans) VALUES' . mb_substr($sql, 0, -1) . ';' . PHP_EOL);
+file_put_contents($distDir . DIRECTORY_SEPARATOR . 'transliterate_utf8_to_ascii.rules', $unaccentRules);

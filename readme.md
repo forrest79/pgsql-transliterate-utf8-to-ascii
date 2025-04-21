@@ -71,6 +71,19 @@ SELECT system.webalize('@utonomous'); -- will print "autonomous"
 ```
 
 
+## Unaccent
+
+On Debian/Ubuntu copy `dist/transliterate_utf8_to_ascii.rules` to `/usr/share/postgresql/15/tsearch_data/transliterate_utf8_to_ascii.rules`.
+
+```sql
+ALTER TEXT SEARCH DICTIONARY unaccent (RULES='transliterate_utf8_to_ascii');
+SELECT unaccent('Hôtel');
+
+CREATE TEXT SEARCH DICTIONARY transliterate_utf8_to_ascii (TEMPLATE = unaccent, RULES='transliterate_utf8_to_ascii');
+SELECT unaccent('transliterate_utf8_to_ascii', 'Hôtel');
+```
+
+
 # How to build
 
 The easiest way to get Perl library source is in Debian like Linux system with `cpan` command.
