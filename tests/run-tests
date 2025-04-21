@@ -54,7 +54,7 @@ $testTransliterate('10°C', '10degC');
 $testTransliterate('without-transliterate', 'without-transliterate');
 
 // cleaning
-pg_query($connection, 'DROP FUNCTION IF EXISTS system.transliterate_to_ascii(character varying)');
+pg_query($connection, 'DROP FUNCTION IF EXISTS system.transliterate_to_ascii(text)');
 pg_query($connection, 'DROP TABLE IF EXISTS system.transliterate_to_ascii_rules');
 pg_query($connection, 'DROP SCHEMA IF EXISTS system');
 
