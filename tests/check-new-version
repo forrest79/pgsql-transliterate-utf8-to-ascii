@@ -4,9 +4,26 @@
 $libraryUrl = 'https://metacpan.org/dist/Text-Unidecode';
 $expectedVersion = '1.30';
 
-$source = file_get_contents($libraryUrl);
-if ($source === FALSE) {
+$sourceGzip = file_get_contents(
+	$libraryUrl,
+	FALSE,
+	stream_context_create([
+		'http' => [
+			'method' => 'GET',
+			'header' => "Accept-Encoding: gzip\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\r\n"
+		]
+	])
+);
+
+if ($sourceGzip === FALSE) {
 	echo sprintf('Can\'t download page "%s".', $libraryUrl) . PHP_EOL;
+	exit(1);
+}
+
+$source = gzdecode($sourceGzip);
+
+if ($source === FALSE) {
+	echo sprintf('Can\'t gzdecode "%s".', $libraryUrl) . PHP_EOL;
 	exit(1);
 }
 
